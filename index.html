@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        
+        .nav {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px 0;
+            margin-bottom: 32px;
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1E3A8A;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: #F1F5F9;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748B;
+            border: none;
+            background: none;
+        }
+        
+        .nav-tab.active {
+            background: #1E3A8A;
+            color: white;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #F97316;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #1E3A8A;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #E2E8F0;
+            color: #475569;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .expense-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #F8FAFC;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .expense-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .expense-details {
+            flex: 1;
+        }
+        
+        .expense-category {
+            font-weight: 500;
+            color: #1E293B;
+        }
+        
+        .expense-date {
+            font-size: 14px;
+            color: #64748B;
+        }
+        
+        .expense-amount {
+            font-weight: 600;
+            color: #1E3A8A;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #E2E8F0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .nav-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function ExpenseTracker() {
+            const [currentTab, setCurrentTab] = useState('home');
+            const [expenses, setExpenses] = useState([]);
+            const [budgets, setBudgets] = useState([]);
+            const [recurringExpenses, setRecurringExpenses] = useState([]);
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = () => {
+                const expensesData = localStorage.getItem('expenses');
+                const budgetsData = localStorage.getItem('budgets');
+                const recurringData = localStorage.getItem('recurring');
+                
+                if (expensesData) setExpenses(JSON.parse(expensesData));
+                if (budgetsData) setBudgets(JSON.parse(budgetsData));
+                if (recurringData) setRecurringExpenses(JSON.parse(recurringData));
+            };
+
+            const saveExpenses = (newExpenses) => {
+                localStorage.setItem('expenses', JSON.stringify(newExpenses));
+                setExpenses(newExpenses);
+            };
+
+            const saveBudgets = (newBudgets) => {
+                localStorage.setItem('budgets', JSON.stringify(newBudgets));
+                setBudgets(newBudgets);
+            };
+
+            const saveRecurring = (newRecurring) => {
+                localStorage.setItem('recurring', JSON.stringify(newRecurring));
+                setRecurringExpenses(newRecurring);
+            };
+
+            const getTotalExpenses = () => {
+                return expenses.reduce((total, expense) => total + expense.amount, 0);
+            };
+
+            const getThisMonthExpenses = () => {
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                return expenses
+                    .filter(expense => {
+                        const expenseDate = new Date(expense.date);
+                        return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+                    })
+                    .reduce((total, expense) => total + expense.amount, 0);
+            };
+
+            const getRecentExpenses = () => {
+                return expenses
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 5);
+            };
+
+            const getCategoryIcon = (category) => {
+                const icons = {
+                    Food: '🍽️',
+                    Transport: '🚗',
+                    Shopping: '🛍️',
+                    Entertainment: '🎮',
+                    Bills: '📄',
+                    Health: '❤️',
+                    Other: '📝',
+                };
+                return icons[category] || '📝';
+            };
+
+            const AddExpenseForm = () => {
+                const [amount, setAmount] = useState('');
+                const [category, setCategory] = useState('Food');
+                const [description, setDescription] = useState('');
+                const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+                const categories = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    
+                    if (!amount || isNaN(parseFloat(amount))) {
+                        alert('Please enter a valid amount');
+                        return;
+                    }
+
+                    const newExpense = {
+                        id: Date.now().toString(),
+                        amount: parseFloat(amount),
+                        category,
+                        description,
+                        date: new Date(date).toISOString(),
+                        createdAt: new Date().toISOString(),
+                    };
+
+                    const updatedExpenses = [...expenses, newExpense];
+                    saveExpenses(updatedExpenses);
+
+                    setAmount('');
+                    setDescription('');
+                    setDate(new Date().toISOString().split('T')[0]);
+                    
+                    alert('Expense added successfully!');
+                    setCurrentTab('home');
+                };
+
+                return (
+                    <div className="card" style={{maxWidth: '600px'}}>
+                        <h2 style={{marginBottom: '24px', fontSize: '24px', fontWeight: 'bold'}}>Add Expense</h2>
+                        <form onSubmit={handleSubmit}>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="input"
+                                placeholder="Amount (₹)"
+                                required
+                            />
+                            
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="input"
+                            >
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                            
+                            <input
+                                type="text"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                className="input"
+                                placeholder="Description (Optional)"
+                            />
+                            
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="input"
+                                required
+                            />
+                            
+                            <button type="submit" className="btn btn-primary" style={{width: '100%'}}>
+                                Add Expense
+                            </button>
+                        </form>
+                    </div>
+                );
+            };
+
+            const BudgetManager = () => {
+                const [showAddForm, setShowAddForm] = useState(false);
+                const [category, setCategory] = useState('');
+                const [limit, setLimit] = useState('');
+
+                const categories = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
+
+                const getBudgetSpent = (budget) => {
+                    const now = new Date();
+                    const startDate = new Date();
+                    startDate.setMonth(now.getMonth() - 1);
+
+                    return expenses
+                        .filter(expense => 
+                            expense.category === budget.category && 
+                            new Date(expense.date) >= startDate
+                        )
+                        .reduce((total, expense) => total + expense.amount, 0);
+                };
+
+                const handleAddBudget = (e) => {
+                    e.preventDefault();
+                    
+                    if (!category || !limit || isNaN(parseFloat(limit))) {
+                        alert('Please fill all fields with valid values');
+                        return;
+                    }
+
+                    const newBudget = {
+                        id: Date.now().toString(),
+                        category,
+                        limit: parseFloat(limit),
+                        period: 'monthly',
+                        createdAt: new Date().toISOString(),
+                    };
+
+                    saveBudgets([...budgets, newBudget]);
+                    setCategory('');
+                    setLimit('');
+                    setShowAddForm(false);
+                    alert('Budget added successfully!');
+                };
+
+                const deleteBudget = (budgetId) => {
+                    if (window.confirm('Are you sure you want to delete this budget?')) {
+                        saveBudgets(budgets.filter(b => b.id !== budgetId));
+                    }
+                };
+
+                const getProgressColor = (percentage) => {
+                    if (percentage >= 100) return '#EF4444';
+                    if (percentage >= 80) return '#F59E0B';
+                    return '#1E3A8A';
+                };
+
+                return (
+                    <div>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
+                            <h2 style={{fontSize: '24px', fontWeight: 'bold'}}>Budget & Alerts</h2>
+                            {!showAddForm && (
+                                <button
+                                    onClick={() => setShowAddForm(true)}
+                                    className="btn btn-primary"
+                                >
+                                    Add Budget
+                                </button>
+                            )}
+                        </div>
+                        
+                        {showAddForm && (
+                            <div className="card" style={{marginBottom: '24px'}}>
+                                <form onSubmit={handleAddBudget}>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="input"
+                                        required
+                                    >
+                                        <option value="">Select Category</option>
+                                        {categories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                    
+                                    <input
+                                        type="number"
+                                        value={limit}
+                                        onChange={(e) => setLimit(e.target.value)}
+                                        className="input"
+                                        placeholder="Budget Limit (₹)"
+                                        required
+                                    />
+                                    
+                                    <div style={{display: 'flex', gap: '12px'}}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddForm(false)}
+                                            className="btn btn-outline"
+                                            style={{flex: 1}}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                                            Add Budget
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {budgets.length > 0 ? (
+                            budgets.map((budget) => {
+                                const spent = getBudgetSpent(budget);
+                                const percentage = (spent / budget.limit) * 100;
+                                
+                                return (
+                                    <div key={budget.id} className="card">
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                                            <h3 style={{fontSize: '18px', fontWeight: '600'}}>{budget.category}</h3>
+                                            <button
+                                                onClick={() => deleteBudget(budget.id)}
+                                                className="btn btn-outline"
+                                                style={{color: '#EF4444', borderColor: '#EF4444'}}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                        
+                                        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                            <span>Spent: ₹{spent.toLocaleString()}</span>
+                                            <span>Limit: ₹{budget.limit.toLocaleString()}</span>
+                                        </div>
+                                        
+                                        <div className="progress-bar">
+                                            <div
+                                                className="progress-fill"
+                                                style={{
+                                                    width: `${Math.min(percentage, 100)}%`,
+                                                    backgroundColor: getProgressColor(percentage)
+                                                }}
+                                            />
+                                        </div>
+                                        <p style={{fontSize: '14px', color: '#64748B', textAlign: 'center'}}>
+                                            {percentage.toFixed(1)}% used
+                                        </p>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            !showAddForm && (
+                                <div className="card">
+                                    <p style={{textAlign: 'center', color: '#64748B'}}>
+                                        No budgets set yet. Add your first budget to start tracking!
+                                    </p>
+                                </div>
+                            )
+                        )}
+                    </div>
+                );
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'home':
+                        return (
+                            <div>
+                                <h1 style={{fontSize: '32px', fontWeight: 'bold', marginBottom: '32px'}}>Dashboard</h1>
+                                
+                                <div className="grid grid-2" style={{marginBottom: '32px'}}>
+                                    <div className="card">
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: '#1E3A8A', marginBottom: '4px'}}>
+                                            ₹{getTotalExpenses().toLocaleString()}
+                                        </h3>
+                                        <p style={{color: '#64748B'}}>Total Expenses</p>
+                                    </div>
+                                    <div className="card">
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: '#1E3A8A', marginBottom: '4px'}}>
+                                            ₹{getThisMonthExpenses().toLocaleString()}
+                                        </h3>
+                                        <p style={{color: '#64748B'}}>This Month</p>
+                                    </div>
+                                </div>
+
+                                <div className="card">
+                                    <h2 style={{fontSize: '20px', fontWeight: '600', marginBottom: '16px'}}>Recent Expenses</h2>
+                                    
+                                    {getRecentExpenses().length > 0 ? (
+                                        getRecentExpenses().map((expense, index) => (
+                                            <div key={index} className="expense-item">
+                                                <div className="expense-icon">
+                                                    {getCategoryIcon(expense.category)}
+                                                </div>
+                                                <div className="expense-details">
+                                                    <div className="expense-category">{expense.category}</div>
+                                                    <div className="expense-date">
+                                                        {new Date(expense.date).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                                <div className="expense-amount">
+                                                    ₹{expense.amount.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p style={{textAlign: 'center', color: '#64748B', marginTop: '32px'}}>
+                                            No expenses yet. Add your first expense!
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    case 'add':
+                        return <AddExpenseForm />;
+                    case 'budget':
+                        return <BudgetManager />;
+                    default:
+                        return <div className="card"><p>Feature coming soon!</p></div>;
+                }
+            };
+
+            return (
+                <div>
+                    <nav className="nav">
+                        <div className="container">
+                            <div className="nav-content">
+                                <h1 className="nav-title">Expense Tracker</h1>
+                                <div className="nav-tabs">
+                                    {[
+                                        {id: 'home', label: 'Home'},
+                                        {id: 'add', label: 'Add'},
+                                        {id: 'analytics', label: 'Analytics'},
+                                        {id: 'budget', label: 'Budget'},
+                                        {id: 'recurring', label: 'Recurring'}
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            className={`nav-tab ${currentTab === tab.id ? 'active' : ''}`}
+                                            onClick={() => setCurrentTab(tab.id)}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    <main className="container">
+                        {renderContent()}
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<ExpenseTracker />, document.getElementById('root'));
+    </script>
+</body>
+</html>
